@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Infrastructure, Mining & Data Centers — Eugene Kitkin | Venture MBA Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: rgba(26, 35, 50, 0.85);
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --accent: #00d4ff;
+      --accent-dim: rgba(0, 212, 255, 0.4);
+      --text: #f0f2f5;
+      --text-muted: rgba(255, 255, 255, 0.65);
+      --green: #34c759;
+      --orange: #ff6b35;
+      --red: #ff453a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Liquid Glass panels */
+    .glass-panel {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .slide {
+      min-height: 100vh;
+      padding: 48px 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .slide-inner {
+      max-width: 1100px;
+      width: 100%;
+    }
+    .slide h1 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .slide .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+    .slide .source {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+      font-style: italic;
+    }
+    .slide .script-hint {
+      font-size: 0.9rem;
+      color: var(--accent-dim);
+      margin-top: 1.5rem;
+      padding: 12px 16px;
+      background: rgba(0, 212, 255, 0.06);
+      border-radius: 12px;
+      border-left: 3px solid var(--accent);
+    }
+
+    /* Chart bars */
+    .bar-chart { display: flex; flex-direction: column; gap: 12px; margin: 1.5rem 0; }
+    .bar-row { display: flex; align-items: center; gap: 16px; }
+    .bar-row-wrap { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+    .bar-label { min-width: 120px; font-size: 0.95rem; }
+    .bar-track { flex: 1; height: 28px; min-width: 0; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
+    .bar-track .bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent), #0099cc); transition: width 0.6s ease; }
+    .bar-fill-dashed { height: 100%; border-radius: 0 6px 6px 0; background: rgba(0, 212, 255, 0.15); border-left: 3px dashed var(--accent); min-width: 16px; }
+    .bar-value { min-width: 72px; text-align: right; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+
+    /* USA state breakdown: one line above the bar, no overlap */
+    .usa-breakdown-label { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
+    .usa-breakdown-line { display: flex; flex-wrap: nowrap; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+    .usa-breakdown-line span { white-space: nowrap; }
+    .usa-breakdown-line .dot { color: rgba(255,255,255,0.35); user-select: none; }
+    .bar-row-wrap .bar-track { flex: 1; min-height: 28px; }
+
+    /* Accordion / details */
+    details.accordion { margin-top: 0.75rem; }
+    details.accordion summary {
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(0, 212, 255, 0.06);
+      border: 1px solid rgba(0, 212, 255, 0.15);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    details.accordion summary::-webkit-details-marker { display: none; }
+    details.accordion summary::before { content: '▸'; display: inline-block; transition: transform 0.2s; }
+    details.accordion[open] summary::before { transform: rotate(90deg); }
+    details.accordion summary:hover { background: rgba(0, 212, 255, 0.1); }
+    details.accordion .accordion-body {
+      padding: 14px 16px;
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      border-left: 3px solid rgba(0, 212, 255, 0.3);
+      border-radius: 0 10px 10px 0;
+      background: rgba(0, 212, 255, 0.03);
+    }
+    details.accordion .accordion-body p { margin-bottom: 0.4rem; }
+    details.accordion .accordion-body p:last-child { margin-bottom: 0; }
+
+    /* Mini slideshow */
+    .mini-slideshow {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+      background: rgba(255,255,255,0.04);
+    }
+    .mini-slideshow img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      animation: slideFade var(--dur, 12s) infinite;
+    }
+    .mini-slideshow img:nth-child(1) { animation-delay: 0s; }
+    .mini-slideshow img:nth-child(2) { animation-delay: calc(var(--dur, 12s) / 3); }
+    .mini-slideshow img:nth-child(3) { animation-delay: calc(var(--dur, 12s) / 3 * 2); }
+    @keyframes slideFade {
+      0%,2%   { opacity: 0; }
+      5%,30%  { opacity: 1; }
+      35%,100%{ opacity: 0; }
+    }
+
+    .quote-block {
+      padding: 20px 24px;
+      border-left: 4px solid var(--accent);
+      background: rgba(0, 212, 255, 0.06);
+      border-radius: 0 12px 12px 0;
+      margin: 1rem 0;
+      font-style: italic;
+    }
+    .quote-block cite { display: block; margin-top: 8px; font-style: normal; font-size: 0.9rem; color: var(--text-muted); }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    table.data-table th, table.data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    table.data-table th { color: var(--text-muted); font-weight: 500; }
+    .check-y { color: var(--green); }
+    .check-n { color: var(--red); }
+    .check-w { color: var(--orange); }
+
+    /* Nav */
+    .nav-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .nav-bar button {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .nav-bar button:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+    .nav-bar .slide-num { font-size: 0.9rem; color: var(--text-muted); min-width: 60px; text-align: center; }
+
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #0099cc);
+      z-index: 101;
+      transition: width 0.25s ease;
+    }
+
+    .part-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 212, 255, 0.15);
+      color: var(--accent);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .agenda-item { margin-bottom: 1.25rem; }
+    .agenda-item:last-child { margin-bottom: 0; }
+    .agenda-topic { display: block; font-weight: 600; font-size: 1.05rem; margin-bottom: 0.25rem; }
+    .agenda-desc { display: block; font-size: 0.9rem; color: var(--text-muted); padding-left: 0.5rem; }
+
+    /* Timeline / Roadmap */
+    .timeline-road {
+      position: relative;
+      padding: 1rem 0 0.5rem;
+    }
+    .timeline-road::before {
+      content: '';
+      position: absolute;
+      left: 52px;
+      top: 2rem;
+      bottom: 2rem;
+      width: 0;
+      border-left: 2px dashed rgba(0, 212, 255, 0.4);
+    }
+    .timeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .timeline-step:last-child { margin-bottom: 0; }
+    .timeline-year {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(0, 212, 255, 0.15);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--accent);
+      z-index: 1;
+    }
+    .timeline-content {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      border-left: 3px solid var(--accent);
+    }
+    .timeline-content strong { color: var(--text); font-size: 0.95rem; }
+    .timeline-content span { color: var(--text-muted); font-size: 0.85rem; display: block; margin-top: 0.2rem; }
+
+    .reasons-pos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem 1.25rem; margin: 1rem 0; }
+    .reason-pos { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; }
+    .reason-pos .icon { flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; background: rgba(0, 212, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+    .reason-pos strong { display: block; margin-bottom: 0.15rem; }
+    .reason-pos span { color: var(--text-muted); font-size: 0.82rem; }
+
+    .coin-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.25rem; }
+    .coin-card { text-align: center; padding: 1rem; border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); }
+    .coin-card.btc { border-color: rgba(247, 147, 26, 0.4); background: rgba(247, 147, 26, 0.06); }
+    .coin-card.doge { border-color: rgba(194, 176, 100, 0.4); background: rgba(194, 176, 100, 0.06); }
+    .coin-card.kadena { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); }
+    .coin-card .coin-symbol { font-size: 1.5rem; margin-bottom: 0.35rem; }
+    .coin-card .coin-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; }
+    .coin-card .coin-why { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
+    .coin-card.btc .coin-why { color: var(--green); }
+
+    .popup-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center; z-index: 1000;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .popup-overlay.active { opacity: 1; pointer-events: auto; }
+    .popup-box {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: 18px; padding: 28px 32px; max-width: 560px; width: 90%;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5); position: relative;
+    }
+    .popup-box h3 { margin: 0 0 0.75rem 0; font-size: 1.1rem; }
+    .popup-box p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 0.5rem 0; }
+    .popup-close {
+      position: absolute; top: 12px; right: 16px; background: none; border: none;
+      color: var(--text-muted); font-size: 1.4rem; cursor: pointer;
+    }
+    .popup-close:hover { color: var(--text); }
+    .clickable-card { cursor: pointer; transition: border-color 0.2s; }
+    .clickable-card:hover { border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <!-- SLIDE 1: Title -->
+  <section class="slide" id="s1">
+    <div class="slide-inner">
+      <h1>AI Infrastructure, Mining & Data Centers</h1>
+      <p class="subtitle">Где сейчас находятся реальные деньги</p>
+      <p class="subtitle">Investment Landscape 2025–2026</p>
+      <div class="glass-panel" style="padding: 32px 40px; margin-top: 2rem;">
+        <p style="font-size: 1.15rem; margin-bottom: 8px;">Eugene Kitkin</p>
+        <p style="color: var(--text-muted);">WowSuch.com · Starskold Mining</p>
+      </div>
+      <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.95rem;">3 марта 2026 · Venture MBA Club</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: $5 Trillion Question -->
+  <section class="slide" id="s2">
+    <div class="slide-inner">
+      <span class="part-badge">Часть 1 · Открытие</span>
+      <h1>Вопрос на $5 триллионов</h1>
+      <p class="subtitle" style="margin-bottom: 0.5rem;">Это величайший прорыв в истории технологий — или величайший пузырь?</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1rem; font-weight: 500;">Годовые инвестиции Big Tech в AI-инфраструктуру (CapEx), млрд $</p>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">2023</span><div class="bar-track"><div class="bar-fill" style="width: 26%;"></div></div><span class="bar-value">$180 млрд</span></div>
+          <div class="bar-row"><span class="bar-label">2024</span><div class="bar-track"><div class="bar-fill" style="width: 41%;"></div></div><span class="bar-value">$280 млрд</span></div>
+          <div class="bar-row"><span class="bar-label">2025</span><div class="bar-track"><div class="bar-fill" style="width: 58%;"></div></div><span class="bar-value">$400 млрд</span></div>
+          <div class="bar-row"><span class="bar-label">2026 (прогноз)</span><div class="bar-track"><div class="bar-fill" style="width: 100%;"></div></div><span class="bar-value">$690 млрд</span></div>
+        </div>
+        <p style="margin-top: 1rem;">Microsoft один тратит <strong style="color: var(--accent);">$140 млрд</strong> — больше, чем ВВП Норвегии.</p>
+      </div>
+      <p class="source">Источники: отчёты Big Tech (CapEx), прогнозы аналитиков 2025–2026</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: Agenda -->
+  <section class="slide" id="s3">
+    <div class="slide-inner">
+      <span class="part-badge">Повестка</span>
+      <h1>Сегодня 6 блоков</h1>
+      <div class="glass-panel" style="padding: 28px 36px; margin-top: 1.5rem;">
+        <ol style="list-style: none; padding-left: 0; margin: 0;">
+          <li class="agenda-item"><span class="agenda-topic">1. Криптомайнинг</span><span class="agenda-desc">Где майнят после Китая и после перехода Ethereum на PoS</span></li>
+          <li class="agenda-item"><span class="agenda-topic">2. AI-дата-центры</span><span class="agenda-desc">Энергетический кризис как ограничитель роста</span></li>
+          <li class="agenda-item"><span class="agenda-topic">3. Дата-центры в космосе</span><span class="agenda-desc">Миллион спутников Маска: фантастика или реальность?</span></li>
+          <li class="agenda-item"><span class="agenda-topic">4. Пузырь или нет?</span><span class="agenda-desc">Сравнение с доткомом, цифры, риски</span></li>
+          <li class="agenda-item"><span class="agenda-topic">5. Кто побеждает</span><span class="agenda-desc">Публичные компании, стартапы, госстратегии</span></li>
+          <li class="agenda-item"><span class="agenda-topic">6. Инвестиционные стратегии</span><span class="agenda-desc">Куда вкладывать $5–50K</span></li>
+        </ol>
+      </div>
+      <div class="script-hint">Кратко пробежимся по плану, потом углубимся.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: One-line thesis -->
+  <section class="slide" id="s4">
+    <div class="slide-inner">
+      <span class="part-badge">Главная мысль</span>
+      <h1 style="font-size: clamp(1.5rem, 3.5vw, 2.2rem); line-height: 1.4; max-width: 800px;">
+        «Энергия контролирует AI. Чипы делают AI возможным. Всё остальное — шум.»
+      </h1>
+      <div style="margin: 2rem 0; font-size: 1.2rem; color: var(--text-muted);">
+        [Электростанция] → [GPU] → [Деньги]
+      </div>
+      <p style="color: var(--accent); font-weight: 600;">Инвестируйте в энергию и чипы. Всё остальное — производные.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: Where crypto is mined -->
+  <section class="slide" id="s5">
+    <div class="slide-inner">
+      <span class="part-badge">Часть 2 · Криптомайнинг</span>
+      <h1>Где майнят сегодня</h1>
+      <p class="subtitle">Распределение глобального хешрейта (после запрета в Китае)</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">% от глобального хешрейта (масштаб одинаковый)</p>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">🇺🇸 США</span><div class="bar-track"><div class="bar-fill" style="width: 37.8%;"></div></div><span class="bar-value">37.8%</span></div>
+          <div style="padding-left: 136px; margin-top: -6px; margin-bottom: 4px;">
+            <div class="usa-breakdown-line" style="margin-bottom: 0;">
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Штаты:</span>
+              <span>TX 28%</span><span class="dot">·</span><span>GA 10%</span><span class="dot">·</span><span>NY 9%</span><span class="dot">·</span><span>KY 8%</span><span class="dot">·</span><span>WY 6%</span><span class="dot">·</span><span>др. 39%</span>
+            </div>
+          </div>
+          <div class="bar-row"><span class="bar-label">🇨🇦 Канада</span><div class="bar-track"><div class="bar-fill" style="width: 18%;"></div></div><span class="bar-value">6.8%</span></div>
+          <div class="bar-row"><span class="bar-label">🇷🇺 Россия</span><div class="bar-track"><div class="bar-fill" style="width: 12.4%;"></div></div><span class="bar-value">4.7%</span></div>
+          <div class="bar-row"><span class="bar-label">🇰🇿 Казахстан</span><div class="bar-track"><div class="bar-fill" style="width: 10%;"></div></div><span class="bar-value">3.8% ↓</span></div>
+          <div class="bar-row">
+            <span class="bar-label">🇴🇲 Оман</span>
+            <div class="bar-track" style="display: flex; align-items: stretch;">
+              <div class="bar-fill" style="width: 4%; flex-shrink: 0; border-radius: 6px 0 0 6px;"></div>
+              <div class="bar-fill-dashed" style="flex: 0 0 9.5%;" title="цель 5%"></div>
+            </div>
+            <span class="bar-value">~1.5% → цель 5%</span>
+          </div>
+          <div class="bar-row"><span class="bar-label">🇪🇹 Эфиопия</span><div class="bar-track"><div class="bar-fill" style="width: 4%;"></div></div><span class="bar-value">~1–2%</span></div>
+          <div class="bar-row"><span class="bar-label">🇿🇦 ЮАР</span><div class="bar-track"><div class="bar-fill" style="width: 2.6%;"></div></div><span class="bar-value">~1%</span></div>
+        </div>
+      </div>
+      <p class="source">Cambridge Centre for Alternative Finance, отраслевые отчёты 2024–2025</p>
+      <div class="script-hint">Майнинг — географический арбитраж. Следуешь за дешёвым электричеством.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: Great Migration -->
+  <section class="slide" id="s6">
+    <div class="slide-inner">
+      <h1>Великая миграция</h1>
+      <p class="subtitle">Китай → мир: как менялся хешрейт за 5 лет</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <div class="timeline-road">
+          <div class="timeline-step">
+            <div class="timeline-year">2021</div>
+            <div class="timeline-content"><strong>Запрет в Китае</strong><span>~50% хешрейта офлайн за месяц</span></div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-year">2022</div>
+            <div class="timeline-content"><strong>Бум Казахстана</strong><span>+400% хешрейта, энергосистема не справляется</span></div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-year">2023</div>
+            <div class="timeline-content"><strong>США №1</strong><span>37.8% глобального хешрейта, лидирует Техас</span></div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-year">2024</div>
+            <div class="timeline-content"><strong>Казахстан ужесточает, Оман входит</strong><span>Регуляция и новые игроки</span></div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-year">2025</div>
+            <div class="timeline-content"><strong>Доминирование США</strong><span>Тренд закрепляется</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="quote-block">
+        «Китай забанил майнинг, и США победили по умолчанию. Но Китай строит в 3 раза больше электростанций. Кто победит в AI, если энергия — это всё?»
+        <cite>— Илон Маск</cite>
+      </div>
+      <div class="script-hint">Миграция за электричеством, не за флагом.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: Ethereum Merge -->
+  <section class="slide" id="s7">
+    <div class="slide-inner">
+      <h1>Ethereum и The Merge</h1>
+      <p class="subtitle">Сентябрь 2022: Proof-of-Work → Proof-of-Stake</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Почему Ethereum перешёл на PoS</p>
+        <div class="reasons-pos">
+          <div class="reason-pos"><span class="icon">⚡</span><div><strong>Энергия</strong><span>PoW ≈113 ТВт·ч/год (как Нидерланды). PoS — на 99% меньше.</span></div></div>
+          <div class="reason-pos"><span class="icon">📈</span><div><strong>Масштабируемость</strong><span>PoW ~15 TPS. PoS даёт путь к 100 000 TPS.</span></div></div>
+          <div class="reason-pos"><span class="icon">🛡</span><div><strong>Безопасность</strong><span>Стейкинг 32 ETH, слэшинг при нарушении — атаки экономически невыгодны.</span></div></div>
+          <div class="reason-pos"><span class="icon">💻</span><div><strong>Железо и вход</strong><span>PoW требовал GPU/ASIC, дефицит и барьеры. PoS — обычный ноутбук.</span></div></div>
+        </div>
+        <p style="margin-top: 1.25rem; font-size: 0.95rem;"><strong>Итог:</strong> рынок GPU-майнинга на <strong>$15 млрд</strong> стал бесполезен за ночь. <span class="check-y">Выиграли:</span> Bitcoin ASIC-майнеры, AI-компании (скупили GPU). <span class="check-n">Проиграли:</span> GPU-майнеры.</p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 1.25rem; margin-bottom: 0.35rem;">Почему серьёзные деньги только в Bitcoin?</p>
+        <div class="coin-cards">
+          <div class="coin-card btc">
+            <div class="coin-symbol">₿</div>
+            <div class="coin-name">Bitcoin</div>
+            <div class="coin-why">~95% дохода майнинга. Огромная ликвидность, институционалы, «цифровое золото». Можно продавать крупные объёмы без обвала цены.</div>
+          </div>
+          <div class="coin-card doge">
+            <div class="coin-symbol">Ð</div>
+            <div class="coin-name">Dogecoin</div>
+            <div class="coin-why">Merged mining с Litecoin, ~$1.5 млрд выручки в год. Удобно для малого масштаба, но не «серьёзные» объёмы; сильнее спекуляция.</div>
+          </div>
+          <div class="coin-card kadena">
+            <div class="coin-symbol">KDA</div>
+            <div class="coin-name">Kadena</div>
+            <div class="coin-why">Малая капитализация и ликвидность. Крупные продажи двигают цену. Долгосрочный майнинг и выход в фиат — рискованно.</div>
+          </div>
+        </div>
+      </div>
+      <p class="source">ethereum.org, Cambridge CCFF, ViaBTC, CoinShares, отраслевая аналитика</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: ASIC evolution -->
+  <section class="slide" id="s8">
+    <div class="slide-inner">
+      <h1>Эволюция ASIC</h1>
+      <p class="subtitle">Эффективность (Дж/ТХ) за 5 лет</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <table class="data-table">
+          <tr><th>Год</th><th>Модель</th><th>Хешрейт</th><th>Мощность</th><th>Эффективность</th></tr>
+          <tr><td>2020</td><td>S19 Pro</td><td>110 TH/s</td><td>3250 W</td><td><strong>29.5 J/TH</strong></td></tr>
+          <tr><td>2023</td><td>S19 XP</td><td>140 TH/s</td><td>3010 W</td><td><strong>21.5 J/TH</strong> (−30%)</td></tr>
+          <tr><td>2025</td><td>S21 Pro</td><td>234 TH/s</td><td>3510 W</td><td><strong>15 J/TH</strong> (−40%)</td></tr>
+          <tr><td>2025</td><td>S21 XP Hydro</td><td>500 TH/s</td><td>5500 W</td><td><strong>11 J/TH</strong></td></tr>
+        </table>
+        <p style="margin-top: 1rem; color: var(--accent);">За 5 лет эффективность выросла примерно в 2.5 раза. Цикл обновления — 18–24 месяца.</p>
+        <details class="accordion">
+          <summary>Почему старое оборудование (&gt;20 J/TH) в убытке</summary>
+          <div class="accordion-body">
+            <p>Аппарат с 29.5 J/TH (S19 Pro) при хешрейте 110 TH/s потребляет ~3250 Вт — то есть ~78 кВт·ч в день. При тарифе $0.05/кВт·ч это ~$3.90/день только электричество. А доход с 110 TH при текущем hashprice (~$0.03/TH/день) — всего ~$3.30/день. <strong>Уже убыток</strong>, и это без учёта аренды места в дата-центре.</p>
+            <p>Для сравнения: S21 Pro (15 J/TH) при 234 TH/s потребляет ~3510 Вт (~84 кВт·ч/день), стоимость электричества ~$4.20/день. Доход — ~$7.00/день. <strong>Маржа +$2.80/день</strong>.</p>
+            <p>Вывод: при одинаковом тарифе старый аппарат уходит в минус, а новый — в плюс. Порог — примерно 20 J/TH: выше — работаешь в убыток при любом разумном тарифе (кроме практически бесплатного электричества).</p>
+          </div>
+        </details>
+        <details class="accordion">
+          <summary>Что такое «Дж/ТХ» — простыми словами</summary>
+          <div class="accordion-body">
+            <p><strong>Дж/ТХ</strong> (джоуль на терахеш) — сколько энергии устройство тратит на одну единицу «работы». Джоуль — крошечная порция электричества; киловатт-час в вашем счёте — это миллионы джоулей. <strong>Чем меньше Дж/ТХ — тем дешевле «добывать».</strong></p>
+            <p><strong>Пример:</strong> два аппарата с одинаковым хешрейтом, но 15 и 30 Дж/ТХ. Второй съедает в 2 раза больше киловатт-часов и денег.</p>
+            <p><strong>Почему Дж/ТХ, а не «киловатт на терахеш»?</strong> Киловатт — мощность (энергия в секунду). Дж/ТХ — энергия на единицу работы. По сути одно и то же, просто в джоулях числа удобнее (меньше нулей). Индустрия договорилась на Дж/ТХ — один показатель, по нему сразу видно, «жадная» установка или нет.</p>
+            <p><strong>Почему это ключевое:</strong> электричество — главная постоянная затрата. Железо покупаешь один раз, а за свет платишь каждый месяц. Чем ниже Дж/ТХ, тем ты в плюсе при более дорогом тарифе.</p>
+          </div>
+        </details>
+      </div>
+      <p class="source">Bitmain, публичные спецификации и обзоры</p>
+      <div class="script-hint">Майнинг — бесконечная гонка за эффективностью, не «купи и держи».</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: Profitability by country -->
+  <section class="slide" id="s9">
+    <div class="slide-inner">
+      <h1>Прибыльность по странам</h1>
+      <p class="subtitle">Полная стоимость в дата-центре под ключ (электричество + обслуживание, охлаждение, инфраструктура), S21 Pro</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Цены — ориентир по хостингу/колокации майнинга (all-in $/кВт·ч). Маржа условная при текущем BTC и сложности.</p>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">Эфиопия ~$0.03–0.04</span><div class="bar-track"><div class="bar-fill" style="width: 85%; background: var(--green);"></div></div><span class="bar-value">+85%</span></div>
+          <div class="bar-row"><span class="bar-label">Россия ~$0.05–0.055</span><div class="bar-track"><div class="bar-fill" style="width: 80%;"></div></div><span class="bar-value">+80%*</span></div>
+          <div class="bar-row"><span class="bar-label">Оман / ОАЭ ~$0.035–0.06</span><div class="bar-track"><div class="bar-fill" style="width: 70%; background: var(--green);"></div></div><span class="bar-value">+70%</span></div>
+          <div class="bar-row"><span class="bar-label">Квебек ~$0.065–0.09</span><div class="bar-track"><div class="bar-fill" style="width: 65%;"></div></div><span class="bar-value">+65%</span></div>
+          <div class="bar-row"><span class="bar-label">Техас ~$0.06–0.08</span><div class="bar-track"><div class="bar-fill" style="width: 50%;"></div></div><span class="bar-value">+50%</span></div>
+          <div class="bar-row"><span class="bar-label">Германия / ЕС ~$0.12–0.25</span><div class="bar-track"><div class="bar-fill" style="width: 0%; background: var(--red);"></div></div><span class="bar-value" style="color: var(--red);">−20%</span></div>
+        </div>
+        <div style="margin-top: 1rem; padding: 12px 16px; background: rgba(0, 212, 255, 0.06); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <p style="font-size: 0.88rem; margin-bottom: 0.35rem;"><strong>Почему sweet spot — около 5 центов?</strong></p>
+          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4;">При текущем BTC (~$66–100K), сложности ~144T и хешрейте ~1060 EH/s доход с 1 TH в день (hashprice) — около $0.029–0.05/TH/день. Оборудование 15 Дж/ТХ тратит ~0,36 кВт·ч на 1 TH в день. Только на электричестве безубыток при тарифе ~$0.08/кВт·ч. Полная стоимость в дата-центре (ток + обслуживание + охлаждение) в зоне $0.05–0.07/кВт·ч даёт устойчивую маржу; выше $0.10/кВт·ч маржа быстро исчезает.</p>
+        </div>
+        <p style="margin-top: 0.75rem; font-size: 0.9rem;">* Россия — хорошая экономика по цифрам, но геополитический риск. Sweet spot: $0.05–0.10/кВт·ч полной стоимости.</p>
+      </div>
+      <p class="source">Hashrate Index (hashprice, difficulty), QuoteColo, CryptoHall24, Miners1688, ViaBTC, отраслевые каталоги хостинга 2025</p>
+      <div class="script-hint">Европа в целом вне игры для майнинга.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: Regulation -->
+  <section class="slide" id="s10">
+    <div class="slide-inner">
+      <h1>Карта регулирования</h1>
+      <p class="subtitle">Где майнинг приветствуют, где запрещают</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p><span class="check-y">Зелёные (pro-mining):</span> США (указы Трампа 2026 — дата-центры и своя энергия), Канада, Оман, ОАЭ, Эфиопия.</p>
+        <p style="margin-top: 1rem;"><span class="check-w">Жёлтые:</span> Россия (10 регионов под запретом до 2031), Казахстан (тренд негативный), ЮАР (энергокризис).</p>
+        <p style="margin-top: 1rem;"><span class="check-n">Красные:</span> Китай (полный запрет с 2021), Алжир, ЕС (MiCA, климат — майнинг мигрирует).</p>
+      </div>
+      <p class="source">Локальное законодательство, MiCA, отраслевые обзоры</p>
+      <div class="script-hint">Регулирование меняется быстро. Следить за трендами.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: Mining checklist -->
+  <section class="slide" id="s11">
+    <div class="slide-inner">
+      <h1>Чеклист для инвестора (майнинг)</h1>
+      <p class="subtitle">Что нужно и чего избегать</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1.25rem 0;">
+        <div class="glass-panel" style="padding: 20px 24px; border-color: rgba(52, 199, 89, 0.3);">
+          <p style="font-size: 1rem; font-weight: 600; color: var(--green); margin-bottom: 1rem;">✅ Нужно</p>
+          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">⚡</span>
+              <div><strong style="font-size: 0.9rem;">Дешёвое электричество</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">Полная стоимость &lt; $0.07/кВт·ч. При BTC $65K и S21 Pro: $0.05 → +$2.60/день; $0.07 → +$0.95/день; $0.08 → ~безубыток; $0.10 → убыток −$1.60/день</span></div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">🏛</span>
+              <div><strong style="font-size: 0.9rem;">Политическая стабильность</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">Предсказуемое регулирование</span></div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">🔧</span>
+              <div><strong style="font-size: 0.9rem;">Новое оборудование</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">11–15 J/TH (S21 Pro и новее)</span></div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">🌱</span>
+              <div><strong style="font-size: 0.9rem;">Возобновляемая энергия</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">Гидро, солнце, ветер. Дополнительный доход: майнер на ВИЭ может выпускать Sustainable Bitcoin Certificates (SBC) и продавать их ESG-фондам и компаниям, которым нужен «зелёный» BTC. Пример: PayPal и Energy Web субсидируют таких майнеров через программу Green Proofs for Bitcoin.</span></div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">🤝</span>
+              <div><strong style="font-size: 0.9rem;">Партнёрство с хостингом</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">Не лезть в инфраструктуру самому</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-panel" style="padding: 20px 24px; border-color: rgba(255, 69, 58, 0.3);">
+          <p style="font-size: 1rem; font-weight: 600; color: var(--red); margin-bottom: 1rem;">❌ Избегать</p>
+          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">🗑</span>
+              <div><strong style="font-size: 0.9rem;">Старые ASIC</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">&gt; 20 J/TH — работают в убыток</span></div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">💶</span>
+              <div><strong style="font-size: 0.9rem;">Дорогие юрисдикции</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">Европа, Япония — электричество слишком дорого</span></div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">🖥</span>
+              <div><strong style="font-size: 0.9rem;">GPU-майнинг</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">Имеет смысл только при пивоте в AI-рендеринг</span></div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">⚠️</span>
+              <div><strong style="font-size: 0.9rem;">Страны с риском запрета</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">Индия, Индонезия — нестабильное регулирование</span></div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+              <span style="font-size: 1.3rem;">💳</span>
+              <div><strong style="font-size: 0.9rem;">Перекредитованные операции</strong><br><span style="font-size: 0.82rem; color: var(--text-muted);">2022 год показал: долги убивают в медвежий рынок</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <details class="accordion">
+        <summary>Почему «разница в 1% эффективности решает результат»?</summary>
+        <div class="accordion-body">
+          <p>Майнинг — commodity-бизнес: все майнят один и тот же Bitcoin, продают по одной цене. Единственное, на чём ты конкурируешь, — себестоимость.</p>
+          <p>Пример: S21 Pro (15 J/TH) при BTC $65K и тарифе $0.07 — прибыль ~$0.95/день. Если эффективность ухудшится всего на 1 J/TH (до 16 J/TH), потребление вырастет на ~6%, и прибыль падает до ~$0.45 — почти в два раза. А при 17 J/TH — уже около нуля.</p>
+          <p>В масштабе фермы на 1000 устройств: 1 J/TH разницы = $500/день = $180K/год. На тонкой марже это разница между прибылью и банкротством.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: Scale of AI demand -->
+  <section class="slide" id="s12">
+    <div class="slide-inner">
+      <span class="part-badge">Часть 3 · AI дата-центры</span>
+      <h1>Масштаб спроса на AI</h1>
+      <p class="subtitle">Потребление энергии дата-центрами AI (ГВт)</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">2021</span><div class="bar-track"><div class="bar-fill" style="width: 6%;"></div></div><span class="bar-value">2 GW</span></div>
+          <div class="bar-row"><span class="bar-label">2023</span><div class="bar-track"><div class="bar-fill" style="width: 16%;"></div></div><span class="bar-value">5 GW</span></div>
+          <div class="bar-row"><span class="bar-label">2025</span><div class="bar-track"><div class="bar-fill" style="width: 32%;"></div></div><span class="bar-value">10+ GW</span></div>
+          <div class="bar-row"><span class="bar-label">2027</span><div class="bar-track"><div class="bar-fill" style="width: 50%;"></div></div><span class="bar-value">50 GW</span></div>
+          <div class="bar-row"><span class="bar-label">2030</span><div class="bar-track"><div class="bar-fill" style="width: 100%;"></div></div><span class="bar-value">156 GW</span></div>
+        </div>
+        <p style="margin-top: 1rem;">156 ГВт ≈ 100 атомных станций или весь энергобаланс Германии.</p>
+        <p style="margin-top: 0.5rem;">McKinsey: <strong style="color: var(--accent);">$5.2 трлн</strong> капитальных вложений до 2030 для такой инфраструктуры.</p>
+      </div>
+      <p class="source">McKinsey Global Institute, отраслевые отчёты по дата-центрам</p>
+      <div class="script-hint">Вопрос залу: кто верит, что мир реально сможет вложить суммарно $5.2 трлн в AI-инфраструктуру до 2030 года — построить столько электростанций, дата-центров и произвести столько чипов? Я думаю, что нет, и дальше объясню почему.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 13: Big Tech $400B -->
+  <section class="slide" id="s13">
+    <div class="slide-inner">
+      <h1>Кто платит за эти $5.2 трлн?</h1>
+      <p class="subtitle">Пока — Big Tech. В 2025 году они вложили $407 млрд. Но это лишь <strong style="color: var(--accent);">8%</strong> от необходимых $5.2 трлн за 6 лет.</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">CapEx в AI-инфраструктуру, 2025 год</p>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">Microsoft</span><div class="bar-track"><div class="bar-fill" style="width: 100%;"></div></div><span class="bar-value">$140B</span></div>
+          <div class="bar-row"><span class="bar-label">Amazon</span><div class="bar-track"><div class="bar-fill" style="width: 64%;"></div></div><span class="bar-value">$90B</span></div>
+          <div class="bar-row"><span class="bar-label">Google</span><div class="bar-track"><div class="bar-fill" style="width: 57%;"></div></div><span class="bar-value">$80B</span></div>
+          <div class="bar-row"><span class="bar-label">Meta</span><div class="bar-track"><div class="bar-fill" style="width: 51%;"></div></div><span class="bar-value">$72B</span></div>
+          <div class="bar-row"><span class="bar-label">Apple</span><div class="bar-track"><div class="bar-fill" style="width: 18%;"></div></div><span class="bar-value">$25B</span></div>
+        </div>
+        <p style="margin-top: 1rem;"><strong>Итого 2025: ~$407 млрд.</strong> Прогноз 2026: $660–690 млрд. Темп растёт, но до ~$870 млрд/год (чтобы набрать $5.2 трлн к 2030) ещё далеко.</p>
+      </div>
+      <div class="quote-block">
+        «Мы увеличим AI-мощность на 80% в этом году и примерно удвоим наш footprint дата-центров за следующие два года.»
+        <cite>— Сатья Наделла, CEO Microsoft (earnings call)</cite>
+      </div>
+      <p class="source">Отчёты компаний (CapEx), earnings calls</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 14: Profitability problem -->
+  <section class="slide" id="s14">
+    <div class="slide-inner">
+      <h1>Проблема прибыльности</h1>
+      <p class="subtitle">Окупается ли текущий CapEx?</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p>Дата-центры, введённые в 2025:</p>
+        <p style="margin-top: 0.75rem;">Амортизация в год: <strong style="color: var(--orange);">$40 млрд</strong></p>
+        <p>Выручка от них: <strong>$15–20 млрд</strong></p>
+        <p style="margin-top: 0.75rem; color: var(--red); font-weight: 600;">Разрыв: −$20–25 млрд. Затраты в ~2.5 раза выше выручки.</p>
+      </div>
+      <div class="quote-block">
+        «Много капитала, который был развёрнут, не принесёт возврата.»
+        <cite>— Дэвид Соломон, CEO Goldman Sachs (октябрь 2025)</cite>
+      </div>
+      <div class="quote-block">
+        «Что-то вроде индустриального пузыря.» — Джефф Безос. «Люди переинвестируют и потеряют деньги.» — Сэм Альтман.
+      </div>
+      <p class="source">Goldman Sachs Research, публичные высказывания CEO</p>
+      <div class="script-hint">Когда основатели крупнейших AI-компаний говорят про перегрев — стоит прислушаться.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 15: Power bottleneck -->
+  <section class="slide" id="s15">
+    <div class="slide-inner">
+      <h1>Энергия — узкое место №1</h1>
+      <p class="subtitle">Рост потребления мощности на один GPU (Вт)</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">2020 A100</span><div class="bar-track"><div class="bar-fill" style="width: 16%;"></div></div><span class="bar-value">400 W</span></div>
+          <div class="bar-row"><span class="bar-label">2023 H100</span><div class="bar-track"><div class="bar-fill" style="width: 28%;"></div></div><span class="bar-value">700 W</span></div>
+          <div class="bar-row"><span class="bar-label">2024 H200</span><div class="bar-track"><div class="bar-fill" style="width: 40%;"></div></div><span class="bar-value">1000 W</span></div>
+          <div class="bar-row"><span class="bar-label">2025 Blackwell</span><div class="bar-track"><div class="bar-fill" style="width: 72%;"></div></div><span class="bar-value">1800 W</span></div>
+          <div class="bar-row"><span class="bar-label">Будущее</span><div class="bar-track"><div class="bar-fill" style="width: 100%;"></div></div><span class="bar-value">2500 W+</span></div>
+        </div>
+        <p style="margin-top: 1rem;">В ~6 раз больше, чем A100 пять лет назад. Один rack: 2020 — 10 кВт, 2025 — 100–200 кВт.</p>
+        <p style="margin-top: 0.5rem; color: var(--orange);">Backlog на подключение к сети в США — 5–10 лет.</p>
+      </div>
+      <p class="source">NVIDIA, SemiAnalysis</p>
+      <div class="script-hint">Электросети не успевают. Хочешь 100 МВт в Калифорнии — очередь на годы.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 16: Elon's warning -->
+  <section class="slide" id="s16">
+    <div class="slide-inner">
+      <h1>Предупреждение Илона Маска</h1>
+      <p class="subtitle">Производство электричества: США vs Китай (ТВт·ч)</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <table class="data-table">
+          <tr><th></th><th>2023</th><th>2026 (прогноз)</th><th>Рост</th></tr>
+          <tr><td>США</td><td>4 000 TWh</td><td>4 200 TWh</td><td>+5%</td></tr>
+          <tr><td>Китай</td><td>8 000 TWh</td><td>12 600 TWh</td><td>+57%</td></tr>
+        </table>
+        <p style="margin-top: 1rem;">К 2026 Китай будет производить электричества <strong style="color: var(--accent);">в 3 раза больше</strong>, чем США.</p>
+      </div>
+      <div class="quote-block">
+        «Китай далеко обойдёт остальной мир по AI-вычислениям к 2026 году. Их решающее преимущество — мощность генерации электроэнергии.»
+        <cite>— Илон Маск, январь 2026</cite>
+      </div>
+      <p class="source">IEA, национальная статистика энергетики</p>
+      <div class="script-hint">Речь не про чипы и талант — про киловатты. Кто контролирует энергию — контролирует AI.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 17: Where DCs are limited -->
+  <section class="slide" id="s17">
+    <div class="slide-inner">
+      <h1>Где ограничения для дата-центров</h1>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin: 1.25rem 0;">
+        <div class="glass-panel" style="padding: 16px; text-align: center;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.4rem;">🇺🇸</div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem;">США</p>
+          <p style="font-size: 0.78rem; color: var(--red);">Backlog на подключение 5–10 лет</p>
+          <p style="font-size: 0.78rem; color: var(--orange);">Дефицит воды (AZ, NV)</p>
+          <p style="font-size: 0.78rem; color: var(--green);">Техас — лидер, дерегулированная сеть</p>
+        </div>
+        <div class="glass-panel" style="padding: 16px; text-align: center;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.4rem;">🇪🇺</div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem;">Европа</p>
+          <p style="font-size: 0.78rem; color: var(--red);">Энергия в 3× дороже США</p>
+          <p style="font-size: 0.78rem; color: var(--red);">Климатические ограничения</p>
+        </div>
+        <div class="glass-panel" style="padding: 16px; text-align: center;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.4rem;">🇨🇳</div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem;">Китай</p>
+          <p style="font-size: 0.78rem; color: var(--green);">Государство: быстрый деплой мощностей</p>
+          <p style="font-size: 0.78rem; color: var(--green);">3× энергия к США</p>
+        </div>
+        <div class="glass-panel" style="padding: 16px; text-align: center;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.4rem;">🇸🇦</div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem;">Ближний Восток</p>
+          <p style="font-size: 0.78rem; color: var(--orange);">Дефицит воды для охлаждения</p>
+          <p style="font-size: 0.78rem; color: var(--green);">Дешёвая энергия (нефть, газ)</p>
+        </div>
+        <div class="glass-panel" style="padding: 16px; text-align: center;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.4rem;">🇮🇳</div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem;">Индия, Африка</p>
+          <p style="font-size: 0.78rem; color: var(--red);">Недостаточная базовая нагрузка</p>
+          <p style="font-size: 0.78rem; color: var(--red);">Нестабильность сети</p>
+        </div>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Физических мест для дата-центров на Земле ограничено. Отсюда идея космоса.</p>
+      <div class="script-hint">Переходим к космическим дата-центрам.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 18: Solutions being tried -->
+  <section class="slide" id="s18">
+    <div class="slide-inner">
+      <h1>Какие решения пробуют</h1>
+      <p class="subtitle">4 направления, ни одно пока не решает проблему полностью</p>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1.25rem 0;">
+        <div class="glass-panel" style="padding: 12px; text-align: center;">
+          <div class="mini-slideshow" style="--dur: 12s;">
+            <img src="img/new/газтурбины1.jpeg" alt="Газовая турбина">
+            <img src="img/new/газтурбина2.jpeg" alt="Газовая электростанция">
+            <img src="img/new/газтурбина3.jpeg" alt="Генерация при дата-центре">
+          </div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.35rem;">Своя генерация</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Газовые турбины при дата-центрах. Мандат Трампа (фев 2026).</p>
+          <p style="font-size: 0.72rem; color: var(--orange); margin-top: 0.3rem;">Статус: экспериментально</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px; text-align: center;">
+          <div class="mini-slideshow" style="--dur: 12s;">
+            <img src="img/new/SMR1.jpeg" alt="Малый модульный реактор">
+            <img src="img/new/SMR2.jpeg" alt="SMR модуль">
+            <img src="img/new/SMR3.jpeg" alt="Компактная АЭС">
+          </div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.35rem;">SMR (мини-реакторы)</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">NuScale (77 МВт), Oklo, TerraPower. Компактные ядерные реакторы.</p>
+          <p style="font-size: 0.72rem; color: var(--orange); margin-top: 0.3rem;">Деплой: 2027–2030</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px; text-align: center;">
+          <div class="mini-slideshow" style="--dur: 12s;">
+            <img src="img/new/VIE1.jpeg" alt="Возобновляемая энергия">
+            <img src="img/new/VIE2.jpeg" alt="Солнечные панели">
+            <img src="img/new/VIE3.jpeg" alt="Ветряки и батареи">
+          </div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.35rem;">ВИЭ + батареи</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Солнце, ветер + хранилища энергии (литий, LFP). NextEra, Brookfield.</p>
+          <p style="font-size: 0.72rem; color: var(--orange); margin-top: 0.3rem;">Проблема: прерывистость</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px; text-align: center;">
+          <div class="mini-slideshow" style="--dur: 12s;">
+            <img src="img/new/termonucleus1.jpeg" alt="Термоядерный реактор">
+            <img src="img/new/termonucleus2.jpeg" alt="Термоядерная установка">
+            <img src="img/new/termonucleus3.jpeg" alt="Термоядерный синтез">
+          </div>
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.35rem;">Термоядерный синтез</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">CFS (SPARC), TAE Technologies. Партнёрство с NVIDIA.</p>
+          <p style="font-size: 0.72rem; color: var(--accent); margin-top: 0.3rem;">Горизонт: 2030-е</p>
+        </div>
+      </div>
+      <p style="color: var(--orange); font-size: 0.9rem; margin-bottom: 1rem;"><strong>Реальность 2025:</strong> ~60% новых дата-центров работают на ископаемом топливе (газ). ESG vs спрос на AI — конфликт.</p>
+      <details class="accordion">
+        <summary>Мандат Трампа — о чём речь (февраль 2026)</summary>
+        <div class="accordion-body">
+          <p>25 февраля 2026 Трамп объявил «Rate Payer Protection Pledge»: Big Tech обязаны строить собственные электростанции при дата-центрах, чтобы не перекладывать нагрузку на потребительскую электросеть и не поднимать тарифы для населения.</p>
+          <p>Amazon, Google, Meta, Microsoft, xAI, Oracle, OpenAI приглашены на встречу в Белый дом в марте 2026 для формализации обязательств. Детали реализации пока не раскрыты — компании уже начали строить off-grid генерацию добровольно.</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Источники: Reuters, Business Insider, The Verge (февраль 2026)</p>
+        </div>
+      </details>
+      <details class="accordion">
+        <summary>Малые модульные реакторы (SMR) — что это и сколько дают</summary>
+        <div class="accordion-body">
+          <p>SMR — компактные ядерные реакторы мощностью 50–300 МВт (обычная АЭС — 1000+ МВт). Можно размещать рядом с дата-центром, подключать модульно: нужно больше мощности — ставишь ещё один модуль.</p>
+          <p><strong>NuScale</strong> — единственный SMR с одобрением NRC (регулятор США). Два дизайна: 50 МВт и 77 МВт на модуль. Станция из 12 модулей = ~924 МВт — хватит на крупный дата-центр. Деплой: ожидается к 2030.</p>
+          <p><strong>Oklo</strong> — микрореактор 15 МВт, работает на переработанном топливе. Контракт с ВВС США. <strong>TerraPower</strong> (Билл Гейтс) — натриевый реактор 345 МВт, строительство в Вайоминге.</p>
+          <p>Хватит ли? Один SMR (77 МВт) покрывает ~1/3 типичного гипермасштабного дата-центра. Нужно 3–4 модуля на один кампус. По масштабу — это решение, но регуляция и сроки строительства пока тормозят.</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Источники: NuScale Power, NRC, отраслевые отчёты</p>
+        </div>
+      </details>
+      <details class="accordion">
+        <summary>Термоядерный синтез — где мы сейчас</summary>
+        <div class="accordion-body">
+          <p><strong>Commonwealth Fusion Systems (CFS)</strong> — лидер частного термояда. Базируется в Массачусетсе (не Калифорния). Привлекли ~$3 млрд — треть всех мировых инвестиций в частный термояд. В январе 2026 установили первый 24-тонный сверхпроводящий магнит для реактора SPARC. Все 18 магнитов — до лета 2026.</p>
+          <p>Партнёрство с NVIDIA (цифровой двойник реактора) и Siemens. Eni (Италия) подписал PPA на $1 млрд+ для покупки энергии с будущей коммерческой станции ARC (Вирджиния, начало 2030-х).</p>
+          <p><strong>TAE Technologies</strong> (Калифорния) — другой подход к термояду (FRC). Привлекли $1.2 млрд. Коммерческий реактор — ориентир конец 2020-х/2030-е.</p>
+          <p>Если термояд заработает — неограниченная чистая энергия. Но «10 лет до коммерции» говорят уже 30 лет. Для AI-инфраструктуры прямо сейчас — не решение, но в горизонте 2030-х возможный game-changer.</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Источники: CFS, TechCrunch (янв 2026), TAE Technologies</p>
+        </div>
+      </details>
+      <p class="source">Reuters, Business Insider, NuScale Power, CFS, отраслевые отчёты</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 19: Energy sector overview -->
+  <section class="slide" id="s19">
+    <div class="slide-inner">
+      <h1>Энергетический сектор — кто стоит за AI</h1>
+      <p class="subtitle">Какие бы AI-решения ни победили, все они потребляют электричество. Энергосектор выигрывает в любом сценарии.</p>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.25rem 0;">
+        <div class="glass-panel" style="padding: 18px; border-color: rgba(52, 199, 89, 0.3);">
+          <p style="font-weight: 600; color: var(--green); margin-bottom: 0.75rem;">🏢 Utilities (электросети)</p>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">Крупные регулируемые электрокомпании — поставляют электричество миллионам потребителей и дата-центрам. Стабильный бизнес, дивиденды.</p>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <div style="padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px;">
+              <p style="font-size: 0.85rem; font-weight: 600;">Duke Energy (DUK)</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Cap ~$90 млрд. 8.4 млн клиентов, 54.8 ГВт мощности. Дивидендная доходность ~3.5%, 99 лет подряд. Рост акций +34% за 3 года.</p>
+            </div>
+            <div style="padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px;">
+              <p style="font-size: 0.85rem; font-weight: 600;">Dominion Energy (D)</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Cap ~$47 млрд. 7 млн клиентов (Вирджиния, Каролина). Дивидендная доходность ~4.5%. Крупнейший заказчик SMR у NuScale.</p>
+            </div>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--green); margin-top: 0.5rem;">Риск: низкий. Регулируемые монополии.</p>
+        </div>
+        <div class="glass-panel" style="padding: 18px; border-color: rgba(0, 212, 255, 0.3);">
+          <p style="font-weight: 600; color: var(--accent); margin-bottom: 0.75rem;">☀️ Возобновляемая энергия</p>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">Солнечные и ветряные парки + батареи для хранения. Строят генерацию, которую покупают дата-центры.</p>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <div style="padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px;">
+              <p style="font-size: 0.85rem; font-weight: 600;">NextEra Energy (NEE)</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Cap ~$178 млрд, крупнейший в мире генератор ВИЭ. Бэклог 30 ГВт проектов. Рост EPS ~8%/год. +7.2 ГВт введено в 2025.</p>
+            </div>
+            <div style="padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px;">
+              <p style="font-size: 0.85rem; font-weight: 600;">Brookfield Renewable (BEP)</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Cap ~$25 млрд. Гидро, ветер, солнце на 5 континентах. Дивидендная доходность ~4%.</p>
+            </div>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--accent); margin-top: 0.5rem;">Риск: средний. Зависит от политики и субсидий.</p>
+        </div>
+        <div class="glass-panel" style="padding: 18px; border-color: rgba(255, 107, 53, 0.3);">
+          <p style="font-weight: 600; color: var(--orange); margin-bottom: 0.75rem;">⚛️ Ядерные инновации (SMR)</p>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">Компактные реакторы нового поколения. Пока на стадии разработки / первых заказов.</p>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <div style="padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px;">
+              <p style="font-size: 0.85rem; font-weight: 600;">NuScale (SMR)</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Публичная (NYSE). Единственный SMR с одобрением NRC. 77 МВт/модуль. Деплой к 2030.</p>
+            </div>
+            <div style="padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px;">
+              <p style="font-size: 0.85rem; font-weight: 600;">Oklo (OKLO)</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Публичная (NYSE). Микрореактор 15 МВт. Контракт с ВВС США. Сэм Альтман — председатель совета директоров.</p>
+            </div>
+            <div style="padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px;">
+              <p style="font-size: 0.85rem; font-weight: 600;">TerraPower</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Частная (Билл Гейтс). Натриевый реактор 345 МВт. Строительство в Вайоминге.</p>
+            </div>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--orange); margin-top: 0.5rem;">Риск: высокий. Технология не проверена в масштабе.</p>
+        </div>
+      </div>
+      <p style="color: var(--accent); font-size: 0.9rem;">Ключевое наблюдение: энергосектор растёт независимо от того, лопнет AI-пузырь или нет — электричество потребляется в любом случае.</p>
+      <p class="source">Duke Energy IR, NextEra Energy IR, NuScale Power, Oklo, MacroTrends, MarketBeat</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 20: Space DC vision -->
+  <section class="slide" id="s20">
+    <div class="slide-inner">
+      <span class="part-badge">Часть 4 · Космос</span>
+      <h1>Дата-центры на орбите — зачем?</h1>
+      <p class="subtitle">На Земле заканчиваются места с дешёвым электричеством и охлаждением. Идея: вынести серверы в космос, где солнце светит 24/7 и не нужна вода.</p>
+      <div class="quote-block">
+        «Через 30 месяцев самое дешёвое место для AI-вычислений будет в космосе — на солнечной энергии.»
+        <cite>— Илон Маск, февраль 2026</cite>
+      </div>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p><strong>SpaceX</strong> подала заявку в FCC (американский регулятор связи) на запуск сети из миллиона спутников с AI-серверами на борту — по сути, дата-центр, разбросанный по орбите.</p>
+        <p style="margin-top: 0.75rem;"><strong>Другие игроки:</strong> Axiom Space (тесты на МКС), Lonestar Data (хранилище данных на Луне), AWS (эксперименты на МКС в 2022).</p>
+      </div>
+      <p class="source">FCC filings, пресс-релизы SpaceX, TechCrunch</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 21: Space promise -->
+  <section class="slide" id="s21">
+    <div class="slide-inner">
+      <h1>Обещания космоса</h1>
+      <p class="subtitle">Почему орбита выглядит привлекательно</p>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1.25rem 0;">
+        <div class="glass-panel" style="padding: 12px; text-align: center;">
+          <img src="img/space_solar.jpg" alt="Солнце в космосе" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; margin-bottom: 0.6rem;">
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem;">☀️ Бесконечная энергия</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Солнце 24/7, нет ночи и облаков. В 10 раз эффективнее, чем на Земле.</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px; text-align: center;">
+          <img src="img/space_cool.jpg" alt="Космос и охлаждение" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; margin-bottom: 0.6rem;">
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem;">❄️ Нет затрат на охлаждение</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">В вакууме тепло излучается напрямую. Вода не нужна.</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px; text-align: center;">
+          <img src="img/space_orbit.jpg" alt="Орбита Земли" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; margin-bottom: 0.6rem;">
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem;">🌍 Нет ограничений по земле</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Бесконечное пространство. Никто не жалуется на шум и стройку.</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px; text-align: center;">
+          <img src="img/space_secure.jpg" alt="Безопасность в космосе" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; margin-bottom: 0.6rem;">
+          <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem;">🛡 Физическая безопасность</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Изолировано от земных угроз. Взлом — только через канал связи.</p>
+        </div>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Звучит как утопия. Но есть нюансы — на следующих слайдах.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 22: Space economics -->
+  <section class="slide" id="s22">
+    <div class="slide-inner">
+      <h1>Жёсткая экономика орбиты</h1>
+      <p class="subtitle">Построить дата-центр в космосе — в 3 раза дороже, чем на Земле</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Сравнение: дата-центр одинаковой мощности (1 ГВт ≈ крупная АЭС)</p>
+        <table class="data-table" style="font-size: 0.9rem;">
+          <tr><th>Статья расходов</th><th>На Земле</th><th>На орбите</th></tr>
+          <tr><td>Доставка / строительство</td><td>включено</td><td style="color: var(--orange);">$5–10 млрд</td></tr>
+          <tr><td>Оборудование (серверы, сети)</td><td>$10 млрд</td><td>$15 млрд</td></tr>
+          <tr><td>Монтаж и сборка</td><td>$3 млрд</td><td style="color: var(--orange);">$10 млрд</td></tr>
+          <tr><td>Страхование</td><td>$0.5 млрд</td><td style="color: var(--red);">$5 млрд</td></tr>
+          <tr><td>Операции (10 лет)</td><td>$1.5 млрд</td><td style="color: var(--orange);">$7.4 млрд</td></tr>
+          <tr style="font-weight: 600;"><td>Итого</td><td style="color: var(--green);">~$15 млрд</td><td style="color: var(--red);">~$42.4 млрд</td></tr>
+        </table>
+        <p style="margin-top: 1rem; color: var(--orange); font-size: 0.9rem;"><strong>Главная проблема — доставка на орбиту.</strong> Сейчас ракета Starship (SpaceX) может поднять ~100 тонн за один запуск стоимостью ~$10 млн. Но дата-центр на 1 ГВт — это тысячи тонн оборудования и сотни запусков. Пока это слишком дорого. Чтобы космические дата-центры стали выгоднее земных, стоимость запуска должна упасть примерно в 10 раз.</p>
+      </div>
+      <p class="source">TechCrunch (февраль 2026), отраслевые оценки орбитальной инфраструктуры</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 23: Space technical challenges -->
+  <section class="slide" id="s23">
+    <div class="slide-inner">
+      <h1>Почему дата-центр в космосе — сложно?</h1>
+      <p class="subtitle" style="margin-bottom: 1rem;">Пять главных проблем простыми словами</p>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.85rem; margin: 1rem 0;">
+        <div class="glass-panel" style="padding: 14px; text-align: center;">
+          <p style="font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1;">⏱</p>
+          <p style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.35rem;">Задержка</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Спутник далеко. Сигнал туда-обратно — полсекунды. Для чата и голоса слишком долго.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; text-align: center;">
+          <p style="font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1;">🔧</p>
+          <p style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.35rem;">Не починить</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">В космос не пошлёшь техника. Радиация быстрее убивает железо. Живёт 5–7 лет вместо 10–15.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; text-align: center;">
+          <p style="font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1;">📡</p>
+          <p style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.35rem;">Мало канала</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">С орбиты на Землю можно передать куда меньше данных, чем по кабелю.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; text-align: center;">
+          <p style="font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1;">💥</p>
+          <p style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.35rem;">Мусор и столкновения</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Миллион спутников — кто-то во что-то врежется. Один взрыв может запустить цепную реакцию.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; text-align: center;">
+          <p style="font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1;">🌡</p>
+          <p style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.35rem;">Охлаждение</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">В вакууме нет воздуха — тепло не отвести как на Земле. Нужны огромные радиаторы.</p>
+        </div>
+      </div>
+      <div class="quote-block" style="margin-top: 1rem;">
+        «Действующего дата-центра в космосе в ближайшие пару лет не будет, но строительные блоки уже появятся.»
+        <cite>— Йосеп Йорнет, Northeastern University, январь 2026</cite>
+      </div>
+      <p class="source">TechCrunch, экспертные интервью</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 24: Verdict Space DC -->
+  <section class="slide" id="s24">
+    <div class="slide-inner">
+      <h1>Итог: когда космос станет реальностью?</h1>
+      <p class="subtitle" style="margin-bottom: 1rem;"></p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+        <div class="glass-panel" style="padding: 18px;">
+          <p style="font-size: 1.5rem; margin: 0 0 0.5rem 0;">📅</p>
+          <p style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem;">Сроки</p>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.4rem 0;"><strong style="color: var(--text);">2026–2028</strong> — только эксперименты.</p>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.4rem 0;"><strong style="color: var(--text);">2029–2032</strong> — первые маленькие установки.</p>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;"><strong style="color: var(--text);">После 2035</strong> — может стать выгодно, если запуск в космос подешевеет в 10 раз.</p>
+        </div>
+        <div class="glass-panel" style="padding: 18px;">
+          <p style="font-size: 1.5rem; margin: 0 0 0.5rem 0;">💡</p>
+          <p style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem;">Куда смотреть</p>
+          <p style="font-size: 0.82rem; margin: 0 0 0.5rem 0;"><span style="color: var(--red);">❌</span> Стартапы «дата-центр в космосе» — пока рано, много денег сгорает.</p>
+          <p style="font-size: 0.82rem; margin: 0 0 0.5rem 0;"><span style="color: var(--green);">✅</span> Косвенно: доли в SpaceX, Rocket Lab, Planet, Maxar — они строят инфраструктуру.</p>
+          <p style="font-size: 0.82rem; margin: 0;"><span style="color: var(--orange);">⚠️</span> Только для тех, кто готов ждать 10+ лет и рисковать.</p>
+        </div>
+      </div>
+      <div class="glass-panel" style="padding: 14px 20px; margin-top: 0.75rem; border-color: rgba(255, 107, 53, 0.25);">
+        <p style="margin: 0; font-size: 0.9rem;"><span style="font-size: 1.1rem;">⚡</span> <strong>Главный риск:</strong> если на Земле решат проблему энергии (термояд, мини-АЭС), космические дата-центры могут никому не понадобиться — пока их построят.</p>
+      </div>
+      <div class="script-hint">Переходим к пузырю.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 25: Bubble question -->
+  <section class="slide" id="s25">
+    <div class="slide-inner">
+      <span class="part-badge">Часть 5 · Пузырь?</span>
+      <h1>Вопрос о пузыре</h1>
+      <p class="subtitle">Дотком 2000 vs AI бум 2025</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <table class="data-table">
+          <tr><th></th><th>Дотком (2000)</th><th>AI бум (2025)</th></tr>
+          <tr><td>P/E лидеров</td><td>~30x</td><td><strong>38x</strong> (Magnificent Seven)</td></tr>
+          <tr><td>CapEx/год</td><td>порядок $100–200B за 4 года</td><td><strong>$400B</strong> в год</td></tr>
+          <tr><td>Размер пузыря (оценка)</td><td>~$5 трлн</td><td><strong>~$85 трлн</strong> (MacroStrategy, в 17 раз больше)</td></tr>
+        </table>
+      </div>
+      <p class="source">MacroStrategy Partnership, исторические данные NASDAQ, отчёты по мультипликаторам</p>
+      <div class="script-hint">Выслушаем обе стороны.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 26: Bear case -->
+  <section class="slide" id="s26">
+    <div class="slide-inner">
+      <h1>Медвежий кейс — это пузырь</h1>
+      <p class="subtitle" style="margin-bottom: 1rem;">Аргументы скептиков</p>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; margin: 1rem 0;">
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(255, 107, 53, 0.2);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">📊</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Дорого</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">P/E 38x — выше, чем в доткоме (30x). Выручка 10–15x — исторически не держится.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(255, 107, 53, 0.2);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">💰</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Разрыв</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">$40 млрд износ оборудования против $15–20 млрд выручки — прибыль не сходится.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(255, 107, 53, 0.2);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">📈</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">GDP</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Goldman (Хациус): «Почти 0% роста ВВП США в 2025 можно отнести к AI».</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(255, 107, 53, 0.2);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">🎯</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Зрелость</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">McKinsey: 78% «используют AI», но только <strong>1%</strong> по-настоящему зарабатывают на нём.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(255, 107, 53, 0.2);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">📉</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Долг</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">К 2028 — около $1.5 трлн совокупного долга по AI-инфраструктуре.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(255, 107, 53, 0.2);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">🎤</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Инсайдеры</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Альтман, Безос, Соломон — открыто говорят про переинвестирование.</p>
+        </div>
+      </div>
+      <p class="source">Goldman Sachs Research, McKinsey, публичные высказывания CEO</p>
+      <div class="script-hint">Когда основатели крупнейших AI-компаний говорят про перегрев — это сигнал.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 27: Bull case -->
+  <section class="slide" id="s27">
+    <div class="slide-inner">
+      <h1>Бычий кейс — это не пузырь</h1>
+      <p class="subtitle" style="margin-bottom: 1rem;">Аргументы оптимистов</p>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.85rem; margin: 1rem 0;">
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(76, 175, 80, 0.25);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">🏢</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Внедрение</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">78% компаний уже используют AI (в 1999 интернет — 20–30%). Copilot — $10 млрд за 18 месяцев.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(76, 175, 80, 0.25);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">✅</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Прибыль</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Big Tech зарабатывают на AI. В доткоме были убытки. NVIDIA — маржа около 50%.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(76, 175, 80, 0.25);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">🏗</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Активы</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Дата-центры — реальные объекты. После краха доткомов сайты не стоили ничего; серверы — стоят.</p>
+        </div>
+        <div class="glass-panel" style="padding: 14px; border-color: rgba(76, 175, 80, 0.25);">
+          <p style="font-size: 1.4rem; margin: 0 0 0.4rem 0;">📈</p>
+          <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem;">Рост</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Выручка +40–60% в год — высоко, но достижимо. В доткоме обещали 100–200% и не вытянули.</p>
+        </div>
+      </div>
+      <div class="quote-block" style="margin-top: 1rem;">
+        «Это не повтор доткома. Реальная выручка, реальная прибыль, реальные активы.»
+        <cite>— BlackRock (iShares), 2025</cite>
+      </div>
+      <p class="source">BlackRock, Goldman Sachs Research (октябрь 2025: «Почему мы ещё не в пузыре... пока»)</p>
+      <div class="script-hint">Обратите внимание на слово «пока».</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 28: Comparison table -->
+  <section class="slide" id="s28">
+    <div class="slide-inner">
+      <h1>Таблица сравнения</h1>
+      <div class="glass-panel" style="padding: 20px 28px; margin: 1.5rem 0; overflow-x: auto;">
+        <table class="data-table" style="font-size: 0.9rem;">
+          <tr><th>Метрика</th><th>Дотком</th><th>AI бум</th></tr>
+          <tr><td>P/E</td><td>30x</td><td class="check-w">38x</td></tr>
+          <tr><td>Рост выручки</td><td>100–200%</td><td class="check-y">40–60%</td></tr>
+          <tr><td>Прибыльность</td><td class="check-n">Убытки</td><td class="check-y">Profitable</td></tr>
+          <tr><td>Adoption</td><td>20–30%</td><td class="check-y">78%</td></tr>
+          <tr><td>Зрелость</td><td>~5%</td><td class="check-w">1% AI-mature</td></tr>
+          <tr><td>CapEx</td><td>$100–200B (4 года)</td><td class="check-w">$400B (1 год)</td></tr>
+          <tr><td>Инфраструктура</td><td>Obsolete после краха</td><td class="check-y">Сохраняет ценность</td></tr>
+          <tr><td>Размер пузыря</td><td>$5T</td><td class="check-w">$85T (17x)</td></tr>
+        </table>
+      </div>
+      <p style="margin-top: 1rem;">Больше сходств, чем различий. Риск реален.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 29: What if it bursts -->
+  <section class="slide" id="s29">
+    <div class="slide-inner">
+      <h1>Что если лопнет?</h1>
+      <p class="subtitle" style="margin-bottom: 1rem;">Сценарий 2027–2028</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div class="glass-panel" style="padding: 16px;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.5rem 0;">⚡</p>
+          <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.4rem;">Что может лопнуть</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.5rem 0;">Медленные деньги с AI, дорогие кредиты, энергокризис.</p>
+          <p style="font-size: 1.3rem; margin: 0 0 0.5rem 0;">💥</p>
+          <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.4rem;">Как выглядит крах</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Падение AI-акций на 50–70%, банкротства дата-центров, венчурные деньги перестают течь.</p>
+        </div>
+        <div style="display: grid; grid-template-rows: 1fr 1fr; gap: 0.85rem;">
+          <div class="glass-panel" style="padding: 14px; border-left: 4px solid var(--green);">
+            <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;">✅ Выживут</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Энергетика, производители чипов, Big Tech (крепкие балансы).</p>
+          </div>
+          <div class="glass-panel" style="padding: 14px; border-left: 4px solid var(--red);">
+            <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;">❌ Пострадают сильнее</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Поздние AI-стартапы (Series D+), облака на GPU (CoreWeave и др.), REIT дата-центров.</p>
+          </div>
+        </div>
+      </div>
+      <div class="glass-panel" style="padding: 14px 20px; background: rgba(33, 150, 243, 0.12); border-color: rgba(33, 150, 243, 0.35);">
+        <p style="margin: 0; font-size: 0.95rem;"><strong>💡 Идея:</strong> держать 10–20% «сухих» денег на 2027–2028 — в панике можно будет дёшево купить активы.</p>
+      </div>
+      <details class="accordion" style="margin-top: 0.75rem;">
+        <summary>Почему именно эти секторы пострадают сильнее</summary>
+        <div class="accordion-body">
+          <p><strong>Поздние AI-стартапы (Series D+)</strong> — оценки $5–10 млрд при минимальной выручке. Когда рынок разворачивается, новых раундов нет, а расходы огромные. В доткоме так погибли Webvan, Pets.com и сотни других: деньги кончились раньше, чем появилась прибыль.</p>
+          <p><strong>Облака на GPU (CoreWeave и др.)</strong> — бизнес построен на аренде GPU, купленных в долг. Если спрос на AI-вычисления упадёт, клиенты уйдут, а кредиты останутся. Долг CoreWeave — миллиарды, а контракты краткосрочные.</p>
+          <p><strong>REIT дата-центров</strong> — фонды, которые строят дата-центры под AI-спрос. Если спрос сожмётся, новые здания останутся пустыми, а ипотека никуда не денется. Высокий долг + падение арендных ставок = двойной удар.</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Общая причина: все три сектора сильно закредитованы и зависят от роста AI-спроса. Если рост остановится — у них нет «подушки» прибыли, как у Big Tech или производителей чипов.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- SLIDE 34: AI agents & deflation -->
+  <section class="slide" id="s34">
+    <div class="slide-inner">
+      <h1>AI-агенты и дефляция издержек</h1>
+      <p class="subtitle">Реальное экономическое влияние</p>
+      <div class="glass-panel" style="padding: 28px 36px; margin: 1.5rem 0;">
+        <table class="data-table">
+          <tr><th>Задача</th><th>До AI</th><th>После AI</th><th>Изменение</th></tr>
+          <tr><td>Content creation</td><td>$5,000</td><td>$500</td><td class="check-y">−90%</td></tr>
+          <tr><td>Code development</td><td>$10,000</td><td>$2,000</td><td class="check-y">−80%</td></tr>
+          <tr><td>Market research</td><td>$20,000</td><td>$2,000</td><td class="check-y">−90%</td></tr>
+          <tr><td>Customer support (год)</td><td>$50,000</td><td>$10,000</td><td class="check-y">−80%</td></tr>
+        </table>
+        <p style="margin-top: 1rem;">Выигрывают: стартапы, агентства с пивотом в AI. Проигрывают: джуниор-роли, legacy-агентства.</p>
+        <p class="source">Goldman Sachs: ~300 млн рабочих мест под угрозой к 2035 глобально.</p>
+      </div>
+      <div class="script-hint">Это не хайп — реальное сжатие издержек.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 35: Memory crisis -->
+  <section class="slide" id="s35">
+    <div class="slide-inner">
+      <h1>Кризис памяти</h1>
+      <p class="subtitle" style="margin-bottom: 1rem;">Данных создаётся больше, чем успевают наращивать хранилища</p>
+      <div class="glass-panel" style="padding: 16px 24px; margin-bottom: 1rem;">
+        <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.6rem;">📊 Разрыв растёт каждый год</p>
+        <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 140px;">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.25rem 0;">Ёмкость хранилищ</p>
+            <p style="font-size: 1.1rem; font-weight: 700; color: var(--green); margin: 0;">+20–30% в год</p>
+          </div>
+          <div style="font-size: 1.5rem; color: var(--text-muted);">→</div>
+          <div style="flex: 1; min-width: 140px;">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.25rem 0;">Создание данных</p>
+            <p style="font-size: 1.1rem; font-weight: 700; color: var(--orange); margin: 0;">+50–60% в год</p>
+          </div>
+          <div style="flex: 0 0 auto; padding: 6px 12px; background: rgba(255,107,53,0.2); border-radius: 8px;">
+            <p style="font-size: 0.85rem; font-weight: 700; color: var(--orange); margin: 0;">Разрыв 20–30% в год</p>
+          </div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; margin-bottom: 1rem;">
+        <div class="glass-panel" style="padding: 12px;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.35rem 0;">🤖</p>
+          <p style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.25rem;">AI-модели</p>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">Терабайты на одну модель. Чекпоинты обучения съедают память.</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.35rem 0;">🎬</p>
+          <p style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.25rem;">Видео (Sora и др.)</p>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">Петабайты в день. Генерация видео — главный потребитель.</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.35rem 0;">🚗</p>
+          <p style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.25rem;">Автономные авто</p>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">Около 4 ТБ данных в день на одну машину.</p>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem;">
+        <div class="glass-panel" style="padding: 12px; border-color: rgba(76, 175, 80, 0.2);">
+          <p style="font-size: 1rem; margin: 0 0 0.3rem 0;">📉</p>
+          <p style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.25rem;">Сжатие (AI codecs)</p>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">Уже внедряют. Быстрый эффект.</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px; border-color: rgba(76, 175, 80, 0.2);">
+          <p style="font-size: 1rem; margin: 0 0 0.3rem 0;">📁</p>
+          <p style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.25rem;">Уровни хранения</p>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">Горячее / холодное. Средний срок.</p>
+        </div>
+        <div class="glass-panel" style="padding: 12px; border-color: rgba(76, 175, 80, 0.2);">
+          <p style="font-size: 1rem; margin: 0 0 0.3rem 0;">🧬</p>
+          <p style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.25rem;">ДНК-хранилища</p>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">Горизонт ~10 лет. Catalog, Twist Bioscience.</p>
+        </div>
+      </div>
+      <p style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">Кто в теме сейчас: <strong>Micron</strong>, <strong>Samsung</strong> — производители памяти. Спекулятивно: Catalog, Twist Bioscience (ДНК).</p>
+      <p class="source">Отраслевые отчёты по storage, полупроводникам</p>
+      <div class="script-hint">Тихая проблема, станет громкой к 2027–2028.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 36: Top 10 insights -->
+  <section class="slide" id="s36">
+    <div class="slide-inner">
+      <span class="part-badge">Заключение</span>
+      <h1>Топ-10 инсайтов</h1>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.7rem; margin: 1rem 0;">
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">⚡</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">Энергия контролирует AI</p>
+        </div>
+        <div class="glass-panel clickable-card" style="padding: 10px; text-align: center;" onclick="document.getElementById('popup-nvidia').classList.add('active')">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">🔀</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">Монополия NVIDIA хрупка <span style="font-size: 0.65rem; color: var(--accent);">ⓘ</span></p>
+        </div>
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">🫧</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">AI-пузырь вероятен</p>
+        </div>
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">🛰</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">Space DC — спекуляция на 10 лет</p>
+        </div>
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">₿</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">Майнинг = только Bitcoin</p>
+        </div>
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">🤖</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">AI-агенты — не хайп</p>
+        </div>
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">🏢</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">Big Tech — самые устойчивые</p>
+        </div>
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">🌱</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">Ранние стартапы > поздние</p>
+        </div>
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">💰</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">Коррекция 2027–2028 — держать кеш</p>
+        </div>
+        <div class="glass-panel" style="padding: 10px; text-align: center;">
+          <p style="font-size: 1.3rem; margin: 0 0 0.3rem 0;">🇨🇳</p>
+          <p style="font-weight: 700; font-size: 0.78rem; margin: 0;">Китай недооценён (3× энергия)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 37: One-sentence thesis -->
+  <section class="slide" id="s37">
+    <div class="slide-inner">
+      <h1 style="font-size: clamp(1.2rem, 2.5vw, 1.6rem); line-height: 1.5; max-width: 900px;">
+        «AI-инфраструктура — это крупнейшее капитальное размещение в истории человечества, вероятно пузырь, но picks-and-shovels — энергия и чипы — неизбежные победители независимо от тайминга.»
+      </h1>
+      <p style="margin-top: 2rem;">Инвестируйте не в мечту об AI. Инвестируйте в инфраструктуру, которая делает AI возможным.</p>
+      <p class="source" style="margin-top: 1rem;">Eugene Kitkin, 2026</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 38: Q&A + Contact -->
+  <section class="slide" id="s38">
+    <div class="slide-inner">
+      <h1>Спасибо!</h1>
+      <p class="subtitle">Вопросы и контакты</p>
+      <div class="glass-panel" style="padding: 32px 40px; margin: 2rem 0; text-align: left;">
+        <p style="font-size: 1.15rem; margin-bottom: 8px;">Eugene Kitkin</p>
+        <p style="color: var(--text-muted); margin-bottom: 4px;">WowSuch.com · Starskold Mining</p>
+        <p style="margin-top: 1rem;">Email: kitkin@wowsuch.com</p>
+        <p>Telegram: @kitkin</p>
+        <p style="margin-top: 1.5rem; font-size: 0.95rem;">Открыт для обсуждения, дебатов и deal flow. Интересные проекты в этих секторах — пишите.</p>
+      </div>
+      <p style="color: var(--text-muted);">Энергия, чипы — и держите 10% в кэше на 2027. Удачи в инвестициях.</p>
+    </div>
+  </section>
+
+  <div class="progress-bar" id="progressBar" style="width: 2.63%;"></div>
+  <nav class="nav-bar" aria-label="Навигация по слайдам">
+    <button type="button" id="btnPrev" aria-label="Назад">←</button>
+    <span class="slide-num" id="slideNum">1 / 38</span>
+    <button type="button" id="btnNext" aria-label="Вперёд">→</button>
+  </nav>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+
+    function update() {
+      slides.forEach((s, i) => {
+        s.style.display = i === current ? 'flex' : 'none';
+      });
+      document.getElementById('slideNum').textContent = (current + 1) + ' / ' + total;
+      document.getElementById('btnPrev').disabled = current === 0;
+      document.getElementById('btnNext').disabled = current === total - 1;
+      document.getElementById('progressBar').style.width = ((current + 1) / total * 100) + '%';
+      window.location.hash = 's' + (current + 1);
+    }
+
+    document.getElementById('btnPrev').addEventListener('click', () => {
+      if (current > 0) { current--; update(); }
+    });
+    document.getElementById('btnNext').addEventListener('click', () => {
+      if (current < total - 1) { current++; update(); }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') document.getElementById('btnPrev').click();
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); document.getElementById('btnNext').click(); }
+    });
+
+    const hash = window.location.hash;
+    if (hash) {
+      const n = parseInt(hash.replace('#s', ''), 10);
+      if (n >= 1 && n <= total) current = n - 1;
+    }
+    update();
+  </script>
+
+  <div class="popup-overlay" id="popup-nvidia" onclick="if(event.target===this)this.classList.remove('active')">
+    <div class="popup-box">
+      <button class="popup-close" onclick="document.getElementById('popup-nvidia').classList.remove('active')">&times;</button>
+      <h3>🔀 Почему монополия NVIDIA хрупка?</h3>
+      <p>Сейчас NVIDIA контролирует ~90% рынка AI-чипов (GPU для обучения моделей). Но конкуренты наступают:</p>
+      <p><strong>AMD</strong> — MI300X уже используют Microsoft и Meta. Цена ниже, производительность догоняет.</p>
+      <p><strong>Google (TPU)</strong> — собственные чипы для своих дата-центров. Не покупают NVIDIA для обучения Gemini.</p>
+      <p><strong>Amazon (Trainium)</strong> — свои чипы для AWS. Дешевле, чем арендовать NVIDIA.</p>
+      <p><strong>Microsoft (Maia)</strong> — разрабатывают AI-чип для Azure.</p>
+      <p><strong>Broadcom, Marvell</strong> — делают custom ASIC для Big Tech по заказу.</p>
+      <p style="color: var(--orange); margin-top: 0.75rem;"><strong>Итог:</strong> каждый крупный покупатель NVIDIA параллельно создаёт свой чип, чтобы не зависеть от одного поставщика. Монополия держится, пока альтернативы не дозрели — но это вопрос 2–3 лет.</p>
+    </div>
+  </div>
+</body>
+</html>
